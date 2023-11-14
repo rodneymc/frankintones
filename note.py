@@ -31,10 +31,14 @@ class Note:
         period = 1 / self.freq
         ang_per_sample = angfreq / Note.SAMPLERATE
         samples = int(Note.SAMPLERATE * period)
-        eprint("%s %d Hz" %(self.name, self.freq))
+        eprint("%s %f Hz" %(self.name, self.freq))
 
         for i in range(samples):
-            onecycle.append(sin(ang_per_sample * i) + .5*sin(ang_per_sample * i * 3)+ .3*sin(ang_per_sample *i * 5))
+            h_count = 1
+            sample_value = 0
+            for h in self.config.harmonics:
+                sample_value += h * sin(ang_per_sample * i * h_count) 
+            onecycle.append(sample_value)
         self.onecycle = onecycle
 
     def get_data(self, duration):

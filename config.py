@@ -23,6 +23,7 @@ class Config:
         self.refinterval = Config.get_value(jobj, "refinterval", 2)
         self.refdivisor = Config.get_value(jobj, "refdivisor", 12)
         self.refnote = Config.get_value(jobj, "refnote", "A2")
+        self.harmonics = Config.get_value(jobj, "harmonics", [0.5])
 
         if (jobj.get("debug_stderr") == False):
             self.dbg = stdout

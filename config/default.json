@@ -2,5 +2,6 @@
     "reffreq": 440,
     "refinterval" : 2,
     "refdivisor" : 12,
-    "refnote" : "A2"
+    "refnote" : "A2",
+    "harmonics": [1, 0, 0.5, 0, 0.3]
 }
