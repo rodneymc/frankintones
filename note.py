@@ -46,7 +46,7 @@ class Note:
 
     def play(self, duration):
         data = numpy.array(self.get_data(duration))
-        eprint("Data is length %d" %(len(data)))
+        #eprint("Data is length %d" %(len(data)))
         sd.play(data, Note.SAMPLERATE)
         sd.wait()
 

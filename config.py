@@ -1,12 +1,23 @@
-import json
+import json, os
 from sys import stderr, stdout
-
+from shutil import copyfile
 
 global print_config
+SANDBOX="config/sandbox.json"
+DEFAULT="config/default.json"
 
 class Config:
-    def __init__(self):
-        jobj = json.load(open("config/default.json"))
+    def __init__(self, fname=SANDBOX):
+
+        # Use the sandbox config if none is specified. If the file
+        # doesn't yet exist (it is in .gitignore) then create it from
+        # the default.json template.
+
+        if (fname == SANDBOX):
+            if not os.path.exists(SANDBOX):
+                copyfile(DEFAULT, SANDBOX)
+
+        jobj = json.load(open(fname))
 
         self.reffreq = Config.get_value(jobj, "reffreq", 440)
         self.refinterval = Config.get_value(jobj, "refinterval", 2)

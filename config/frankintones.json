@@ -1,0 +1,6 @@
+{
+    "reffreq": 440,
+    "refinterval" : 1.5,
+    "refdivisor" : 7,
+    "refnote" : "A2"
+}
