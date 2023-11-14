@@ -6,7 +6,7 @@ global print_config
 
 class Config:
     def __init__(self):
-        jobj = json.load(open("config.json"))
+        jobj = json.load(open("config/default.json"))
 
         self.reffreq = Config.get_value(jobj, "reffreq", 440)
         self.refinterval = Config.get_value(jobj, "refinterval", 2)
