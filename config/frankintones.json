@@ -3,5 +3,5 @@
     "refinterval" : 1.5,
     "refdivisor" : 7,
     "refnote" : "A2",
-    "harmonics": [1, 0, 0.5, 0, 0.3]
+    "harmonics": [0.5, 0, 0.2, 0, 0.1]
 }

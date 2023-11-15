@@ -5,7 +5,7 @@ from config import eprint
 
 class Note:
 
-    SAMPLERATE = 44100
+    SAMPLERATE = 48000
     NOTES = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
 
     # Note number is relative to the reference note. Eg if ref note is C2
@@ -16,7 +16,6 @@ class Note:
         number = Note.name_to_number(name, config.refnote)
         self.freq = config.reffreq * config.refinterval ** (number / config.refdivisor)
         self.name = name
-        self.makecycle()
         
     def name_to_number(name, refnote):
         return Note.name_to_number_abs(name) - Note.name_to_number_abs(refnote)
@@ -25,32 +24,31 @@ class Note:
         namesplit = re.findall("[A-G]#*|[0-9]", name)
         return int(namesplit[1]) * 12 + Note.NOTES.index(namesplit[0])
 
-    def makecycle(self):
-        onecycle = []
+    def get_data(self, duration):
+        duration_samples = duration*Note.SAMPLERATE
+        result = []
         angfreq = self.freq*2*pi
         period = 1 / self.freq
         ang_per_sample = angfreq / Note.SAMPLERATE
-        samples = int(Note.SAMPLERATE * period)
-        eprint("%s %f Hz" %(self.name, self.freq))
+        samples_per_cycle = Note.SAMPLERATE * period
+        
+        # Round the duration to a whole number of cycles
+        duration_samples = round(round(duration_samples / samples_per_cycle) * samples_per_cycle)
 
-        for i in range(samples):
+        for i in range(duration_samples):
             h_count = 1
             sample_value = 0
             for h in self.config.harmonics:
                 sample_value += h * sin(ang_per_sample * i * h_count) 
-            onecycle.append(sample_value)
-        self.onecycle = onecycle
-
-    def get_data(self, duration):
-        duration_samples = duration*Note.SAMPLERATE
-        result = []
-        while len(result) < duration_samples:
-            result+=self.onecycle
+            result.append(sample_value)
         return result
 
     def play(self, duration):
         data = numpy.array(self.get_data(duration))
-        #eprint("Data is length %d" %(len(data)))
         sd.play(data, Note.SAMPLERATE)
         sd.wait()
 
+    def play_buffer(buffer):
+        data = numpy.array(buffer)
+        sd.play(data, Note.SAMPLERATE)
+        sd.wait()
