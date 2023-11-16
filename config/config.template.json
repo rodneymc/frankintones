@@ -2,6 +2,7 @@
     "samplerate": 48000,
     "togglenote": "A1",
     "lowpass": true,
+    "octaves": 8,
     "tunings": {
         "Standard": {
             "reffreq": 440,
