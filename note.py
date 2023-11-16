@@ -11,15 +11,13 @@ class Note:
     # Note number is relative to the reference note. Eg if ref note is C2
     # and the required note is B2 then the note number is -1
 
-    def __init__(self, name, config):
+    def __init__(self, name, config, tuning):
         self.config = config
-        number = Note.name_to_number(name, config.refnote)
-        self.freq = config.reffreq * config.refinterval ** (number / config.refdivisor)
+        number = Note.name_to_number_abs(name) - Note.name_to_number_abs(tuning.refnote)
+        self.freq = tuning.reffreq * tuning.refinterval ** (number / tuning.refdivisor)
         self.name = name
-        
-    def name_to_number(name, refnote):
-        return Note.name_to_number_abs(name) - Note.name_to_number_abs(refnote)
-    
+        self.harmonics = tuning.harmonics
+            
     def name_to_number_abs(name):
         namesplit = re.findall("[A-G]#*|[0-9]", name)
         return int(namesplit[1]) * 12 + Note.NOTES.index(namesplit[0])
@@ -38,17 +36,17 @@ class Note:
         for i in range(duration_samples):
             h_count = 1
             sample_value = 0
-            for h in self.config.harmonics:
+            for h in self.harmonics:
                 sample_value += h * sin(ang_per_sample * i * h_count) 
             result.append(sample_value)
         return result
 
     def play(self, duration):
         data = numpy.array(self.get_data(duration))
-        sd.play(data, Note.SAMPLERATE)
+        sd.play(data, self.config.sample_rate)
         sd.wait()
 
-    def play_buffer(buffer):
+    def play_buffer(buffer, config):
         data = numpy.array(buffer)
-        sd.play(data, Note.SAMPLERATE)
+        sd.play(data, config.sample_rate)
         sd.wait()
