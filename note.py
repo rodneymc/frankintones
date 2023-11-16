@@ -22,7 +22,7 @@ class Note:
         namesplit = re.findall("[A-G]#*|[0-9]", name)
         return int(namesplit[1]) * 12 + Note.NOTES.index(namesplit[0])
 
-    def get_data(self, duration):
+    def get_data(self, duration, as_radians = False):
         duration_samples = duration*Note.SAMPLERATE
         result = []
         angfreq = self.freq*2*pi
@@ -33,17 +33,22 @@ class Note:
         # Round the duration to a whole number of cycles
         duration_samples = round(round(duration_samples / samples_per_cycle) * samples_per_cycle)
 
-        for i in range(duration_samples):
-            h_count = 1
-            sample_value = 0
-            for h in self.harmonics:
-                if self.config.lowpass:
-                    # Skip any harmonics that would exceed the Nyquist limit
-                    if self.freq * h_count > self.config.sample_rate / 2:
-                        break
+        if (as_radians):
+            for i in range(duration_samples):
+                result.append(ang_per_sample *i)
 
-                sample_value += h * sin(ang_per_sample * i * h_count) 
-            result.append(sample_value)
+        else:
+            for i in range(duration_samples):
+                h_count = 1
+                sample_value = 0
+                for h in self.harmonics:
+                    if self.config.lowpass:
+                        # Skip any harmonics that would exceed the Nyquist limit
+                        if self.freq * h_count > self.config.sample_rate / 2:
+                            break
+
+                    sample_value += h * sin(ang_per_sample * i * h_count) 
+                result.append(sample_value)
         return result
 
     def play(self, duration):

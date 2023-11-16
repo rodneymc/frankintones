@@ -1,7 +1,8 @@
 {
     "samplerate": 48000,
-    "togglenote": "A1",
+    "magickey": "C1",
     "lowpass": true,
+    "mididev": 1,
     "octaves": 8,
     "tunings": {
         "Standard": {

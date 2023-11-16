@@ -37,6 +37,10 @@ class Config:
 
         self.sample_rate = Config.get_value(jobj, "sample_rate", 48000)
         self.lowpass = Config.get_value(jobj, "low_pass", True)
+        self.mididev = Config.get_value(jobj, "mididev", None)
+        self.sleeptime = Config.get_value(jobj, "sleeptime", 0.001)
+        self.magickey = Config.get_value(jobj, "magickey", "A0")
+        self.octaves = Config.get_value(jobj, "octaves", None)
 
         tunings = {}
         tunings_obj = jobj.get("tunings")
@@ -49,6 +53,9 @@ class Config:
     def get_value(jobj, key, default):
         res = jobj.get(key)
         if res == None: res = default
+
+        if res == None:
+            raise ValueError("%s has no config value or internal default" % key)
         return res
     
     ## Allow setting of global print_config
@@ -65,6 +72,14 @@ class Config:
     
     def get_tuning(self, name):
         return self.tunings[name]
+    
+    # Get a tuning by its number, we just roll over once we've
+    # got to the end
+    def get_tuning_by_number(self, number):
+        tuning_names = list(self.tunings.keys())
+        number %= len(tuning_names)
+        name = tuning_names[number]
+        return name, self.tunings[name]
 
 def eprint(*args, **kwargs):
     print(*args, file=print_config.dbg, **kwargs)
