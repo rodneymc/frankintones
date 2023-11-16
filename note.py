@@ -37,6 +37,11 @@ class Note:
             h_count = 1
             sample_value = 0
             for h in self.harmonics:
+                if self.config.lowpass:
+                    # Skip any harmonics that would exceed the Nyquist limit
+                    if self.freq * h_count > self.config.sample_rate / 2:
+                        break
+
                 sample_value += h * sin(ang_per_sample * i * h_count) 
             result.append(sample_value)
         return result

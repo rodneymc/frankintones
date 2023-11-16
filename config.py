@@ -35,7 +35,9 @@ class Config:
         else:
             self.dbg = stderr
 
-        self.sample_rate = Config.get_value(jobj, "sample_rate", 48000) 
+        self.sample_rate = Config.get_value(jobj, "sample_rate", 48000)
+        self.lowpass = Config.get_value(jobj, "low_pass", True)
+
         tunings = {}
         tunings_obj = jobj.get("tunings")
         if tunings_obj == None: raise ValueError("No tunings in config")
