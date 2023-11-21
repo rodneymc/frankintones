@@ -35,7 +35,7 @@ class Note:
 
         if (as_radians):
             for i in range(duration_samples):
-                result.append(ang_per_sample *i)
+                result.append((ang_per_sample *i)%(2*pi))
 
         else:
             for i in range(duration_samples):
