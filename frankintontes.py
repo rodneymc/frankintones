@@ -20,7 +20,7 @@ def main(args):
     midi_in = midi.Input(config.mididev)
     sleeptime = config.sleeptime
     tuning_number = 0
-    magic_key = Note.name_to_number_abs(config.magickey) + 9
+    magic_key = Note.name_to_number_midi(config.magickey)
     eprint("Magic key is %d %s %s" %(magic_key, config.magickey, midi.midi_to_ansi_note(magic_key)))
 
     while True:
@@ -72,4 +72,4 @@ def play_scale(scale, config, tuningName):
     Note.play_buffer(scaleData, config)
 
 if __name__ == "__main__":
-    main_old(argv)
+    main(argv)

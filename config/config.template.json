@@ -10,14 +10,14 @@
             "refinterval": 2,
             "refdivisor": 12,
             "refnote": "A4",
-            "harmonics": [0.5, 0, 0.2, 0, 0.1]
+            "harmonics": [0.1, 0, 0.03, 0, 0.01]
         },
         "Frankintones": {
             "reffreq": 440,
             "refinterval": 1.5,
             "refdivisor": 7,
             "refnote": "A4",
-            "harmonics": [0.5, 0, 0.2, 0, 0.1]
+            "harmonics": [0.1, 0, 0.03, 0, 0.01]
         },
         "Daft1": {
             "reffreq": 440,
