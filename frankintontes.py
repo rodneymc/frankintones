@@ -22,13 +22,20 @@ def main(args):
     tuning_number = 0
     magic_key = Note.name_to_number_midi(config.magickey)
     eprint("Magic key is %d %s %s" %(magic_key, config.magickey, midi.midi_to_ansi_note(magic_key)))
+    initialized_tunings = {}
 
     while True:
         tuning_name, tuning = config.get_tuning_by_number(tuning_number)
         tuning_number += 1
-        eprint("Initialise with tuning %s" %tuning_name)
-        notebank = Notebank(config, tuning)
-        switch_tuning = False
+        notebank = initialized_tunings.get(tuning_name)
+        if notebank == None:
+            eprint("Initialise with tuning %s" %tuning_name)
+            notebank = Notebank(config, tuning)
+            initialized_tunings[tuning_name] = notebank
+        else:
+            eprint("Switched to tuning %s" %tuning_name)
+        
+        switch_tuning = False # until next switch
 
         while not switch_tuning:
             if not midi_in.poll():
@@ -48,6 +55,7 @@ def main(args):
                         # Note on, unless it's the magic key
                         if key == magic_key:
                             switch_tuning = True # To the next tuning
+                            notebank.stop()
                         else:
                             notebank.note_on(key)
     

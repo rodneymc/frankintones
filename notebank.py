@@ -2,7 +2,7 @@ from config import eprint
 from pygame import midi
 import numpy
 from note import Note
-from time import time
+from time import time, sleep
 import sounddevice as sd
 
 PRE_PREPARED_TIME = 10 # seconds
@@ -23,6 +23,12 @@ class Chord:
 
         self.buffer = note_data
 
+    def add_note(self, note):
+        self.buffer += note.get_prepared_data()
+
+    def remove_note(self, note):
+        self.buffer -= note.get_prepared_data()
+
     def play(self):
         sd.play(self.buffer, self.sample_rate)
 
@@ -32,7 +38,7 @@ class Chord:
 class Notebank:
     def __init__(self, config, tuning):
         self.config = config
-        self.current_notes = 0
+        self.current_note_mask = 0
         self.current_chord = None
 
         # Start from Midi note number zero so we can just
@@ -52,8 +58,14 @@ class Notebank:
         
         eprint("Initialise chord....")
         start = time()
-        chord = self.chord_from_namelist(["C4", "D#4", "G4", "B4"])
+#        chord = self.chord_from_namelist(["C4", "D#4", "G4", "B4"])
+#        chord = self.chord_from_namelist(["C3", "E3", "G3"])
+        chord = self.chord_from_namelist(["G3"])
         chord.play()
+        for n in ["A#3", "D4", "F4", "G4"]:
+            sleep(1.5)
+            chord.add_note(self.notelist[Note.name_to_number_midi(n)])
+
         eprint("Took %f" %(time()-start))
         
     def chord_from_namelist(self, namelist):
@@ -66,12 +78,26 @@ class Notebank:
     def note_on(self, midi_key):
         note = self.notelist[midi_key]
         eprint("Note on %d %s %dHz" %(midi_key, note.name, note.freq))
-        # For test purposes for now just construct a monophonic chord
-        self.current_chord = Chord([self.notelist[midi_key]], self.config.sample_rate)
-        self.current_chord.play()
+        self.current_note_mask |= (1 << midi_key)
+        if self.current_chord == None:
+            self.current_chord = Chord([self.notelist[midi_key]], self.config.sample_rate)
+            self.current_chord.play()
+        else:
+            self.current_chord.add_note(self.notelist[midi_key])
 
     def note_off(self, midi_key):
         eprint("Note off %d" %midi_key)
-        # For now just stop playing the current chord.
+        self.current_note_mask &= ~ (1 << midi_key)
+        
         if (self.current_chord != None):
-            self.current_chord.stop
+            if (self.current_note_mask == 0):
+                self.current_chord.stop()
+                self.current_chord = None
+            else:
+                self.current_chord.remove_note(self.notelist[midi_key])
+
+    def stop(self):
+        if self.current_chord:
+            self.current_chord.stop()
+        self.current_chord = None
+        self.current_note_mask = 0

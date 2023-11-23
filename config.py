@@ -15,6 +15,7 @@ class Config:
             self.refdivisor = Config.get_value(jobj, "refdivisor", 12)
             self.refnote = Config.get_value(jobj, "refnote", "A4")
             self.harmonics = Config.get_value(jobj, "harmonics", [0.5])
+            self.phases = Config.get_value(jobj, "phases", [0])
 
     def __init__(self, fname=DEFAULT):
 

@@ -19,6 +19,7 @@ class Note:
         self.freq = tuning.reffreq * tuning.refinterval ** (number / tuning.refdivisor)
         self.name = name
         self.harmonics = tuning.harmonics
+        self.phases = tuning.phases
             
     def name_to_number_abs(name):
         namesplit = re.findall("[A-G]#*|[0-9]", name)
@@ -39,7 +40,7 @@ class Note:
         if trim:
             duration_samples = round(round(duration_samples / samples_per_cycle) * samples_per_cycle)
 
-        result = np.zeros(duration_samples, dtype='float32')
+        result = np.zeros(duration_samples, dtype='float64')
 
         if (as_radians):
             for i in range(duration_samples):
@@ -56,13 +57,14 @@ class Note:
                     if self.freq * h_count > self.config.sample_rate / 2:
                         break
 
-                harmonic_rads_per_sample = ang_per_sample * h_count
-                final_angle = harmonic_rads_per_sample * duration_samples
-                these_harmonics_angles = np.linspace(0, final_angle, duration_samples)
-                these_harmonics_values = h * np.sin(these_harmonics_angles)
-                result = np.add(result, these_harmonics_values)
+                for phase in self.phases:
+                    harmonic_rads_per_sample = ang_per_sample * h_count
+                    final_angle = harmonic_rads_per_sample * duration_samples + phase
+                    these_harmonics_angles = np.linspace(phase, final_angle, duration_samples)
+                    these_harmonics_values = h * np.sin(these_harmonics_angles)
+                    result = np.add(result, these_harmonics_values)
 
-                h_count += 1
+                    h_count += 1
         return result
 
     def pre_prepare(self, duration, trim=True):
