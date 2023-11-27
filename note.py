@@ -28,7 +28,7 @@ class Note:
     def name_to_number_midi(name):
         return Note.name_to_number_abs(name) + 12
 
-    def get_data(self, duration, as_radians = False, trim=True):
+    def get_data(self, duration, trim=True):
         #eprint("Get data %s %dHz" %(self.name, self.freq))
         duration_samples = duration*Note.SAMPLERATE
         angfreq = self.freq*2*pi
@@ -42,33 +42,27 @@ class Note:
 
         result = np.zeros(duration_samples, dtype='float64')
 
-        if (as_radians):
-            for i in range(duration_samples):
-                result.append((ang_per_sample *i)%(2*pi))
+        for h in self.harmonics:
+            h_count = 1
+            if h == 0:
+                continue
+            if self.config.lowpass:
+                # Skip any harmonics that would exceed the Nyquist limit
+                if self.freq * h_count > self.config.sample_rate / 2:
+                    break
 
-        else:
+            for phase in self.phases:
+                harmonic_rads_per_sample = ang_per_sample * h_count
+                final_angle = harmonic_rads_per_sample * duration_samples + phase
+                these_harmonics_angles = np.linspace(phase, final_angle, duration_samples)
+                these_harmonics_values = h * np.sin(these_harmonics_angles)
+                result = np.add(result, these_harmonics_values)
 
-            for h in self.harmonics:
-                h_count = 1
-                if h == 0:
-                    continue
-                if self.config.lowpass:
-                    # Skip any harmonics that would exceed the Nyquist limit
-                    if self.freq * h_count > self.config.sample_rate / 2:
-                        break
-
-                for phase in self.phases:
-                    harmonic_rads_per_sample = ang_per_sample * h_count
-                    final_angle = harmonic_rads_per_sample * duration_samples + phase
-                    these_harmonics_angles = np.linspace(phase, final_angle, duration_samples)
-                    these_harmonics_values = h * np.sin(these_harmonics_angles)
-                    result = np.add(result, these_harmonics_values)
-
-                    h_count += 1
+                h_count += 1
         return result
 
     def pre_prepare(self, duration, trim=True):
-        self.wavetable = self.get_data(duration, False, trim)
+        self.wavetable = self.get_data(duration, trim)
 
     def get_prepared_data(self):
         return self.wavetable
