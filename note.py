@@ -28,7 +28,15 @@ class Note:
     def name_to_number_midi(name):
         return Note.name_to_number_abs(name) + 12
 
-    def get_data(self, duration, trim=True):
+    def get_data(self, duration, trim=True, phase=None):
+
+        # Interprete phase==None as all the phases
+        if phase == None:
+            phases = self.phases
+        else:
+            # A sepcific phase was requested
+            phases = [phase]
+
         #eprint("Get data %s %dHz" %(self.name, self.freq))
         duration_samples = duration*Note.SAMPLERATE
         angfreq = self.freq*2*pi
@@ -51,7 +59,7 @@ class Note:
                 if self.freq * h_count > self.config.sample_rate / 2:
                     break
 
-            for phase in self.phases:
+            for phase in phases:
                 harmonic_rads_per_sample = ang_per_sample * h_count
                 final_angle = harmonic_rads_per_sample * duration_samples + phase
                 these_harmonics_angles = np.linspace(phase, final_angle, duration_samples)
@@ -60,6 +68,10 @@ class Note:
 
                 h_count += 1
         return result
+
+    def get_phases(self, duration, trim):
+        for phase in self.phases:
+            yield self.get_data(duration, trim, phase)
 
     def pre_prepare(self, duration, trim=True):
         self.wavetable = self.get_data(duration, trim)

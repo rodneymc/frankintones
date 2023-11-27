@@ -5,32 +5,29 @@ from note import Note
 from time import time, sleep
 import sounddevice as sd
 
-PRE_PREPARED_TIME = 10 # seconds
+PRE_PREPARED_TIME = 1 # seconds
 
 class Chord:
     def __init__(self, notelist, sample_rate):
 
         self.sample_rate = sample_rate
         samples = sample_rate * PRE_PREPARED_TIME
+        self.buffer = numpy.zeros(samples)
 
-        if len (notelist) == 1:
-            self.buffer = numpy.array(notelist[0].get_prepared_data())
+        for note in notelist:
+            self.add_note(note)
 
-        note_data = notelist[0].get_prepared_data().copy()
-
-        for note in notelist[1:]:
-            note_data = numpy.add(note.get_prepared_data(), note_data)
-
-        self.buffer = note_data
 
     def add_note(self, note):
-        self.buffer += note.get_prepared_data()
+        for phase_data in note.get_phases(PRE_PREPARED_TIME, False):
+            self.buffer += phase_data
 
     def remove_note(self, note):
-        self.buffer -= note.get_prepared_data()
+        for phase_data in note.get_phases(PRE_PREPARED_TIME, False):
+            self.buffer -= phase_data
 
     def play(self):
-        sd.play(self.buffer, self.sample_rate)
+        sd.play(self.buffer, self.sample_rate, loop=True)   
 
     def stop(self):
         sd.stop()
@@ -53,7 +50,7 @@ class Notebank:
             # do not trim. This makes constructing chords easier. The trim is
             # useless for polyphonics anyway as the different notes in the chord
             # would have to be trimmed to different lengths anyhow.
-            n.pre_prepare(PRE_PREPARED_TIME, trim=False)
+            #n.pre_prepare(PRE_PREPARED_TIME, trim=False)
             self.notelist.append(n)
         
         eprint("Initialise chord....")
@@ -65,6 +62,8 @@ class Notebank:
         for n in ["A#3", "D4", "F4", "G4"]:
             sleep(1.5)
             chord.add_note(self.notelist[Note.name_to_number_midi(n)])
+        sleep(1.5)
+        chord.stop()
 
         eprint("Took %f" %(time()-start))
         
