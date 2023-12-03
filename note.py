@@ -39,6 +39,7 @@ class Note:
     # Inputs:
     #  duration - Length of wavetable in seconds
     #  trim - whether to adjust the length to an exact number of samples
+    #         see also comments in the code around if trim:
     #  phase - phase offset in radians. If None, then all the phases
     #          listed in self.phases will be superimposed.
     def get_data(self, duration, trim=True, phase=None):
@@ -57,9 +58,18 @@ class Note:
         ang_per_sample = angfreq / Note.SAMPLERATE
         samples_per_cycle = Note.SAMPLERATE * period
         
-        # Round the duration to a whole number of cycles
+        # Round the duration to a whole number of cycles. This reduces repition noise, ie
+        # a pop or click when the wavetable loops round. However it has two problems,
+        # 1) for a wavetable containing combined phases there is no common zero-crossover point
+        # to round to
+        # 2) Different note's wavetables will be trimmed to different lengths. 
         if trim:
+            duration_samples_pretrim = duration_samples
             duration_samples = round(round(duration_samples / samples_per_cycle) * samples_per_cycle)
+            # Note that there is still an error. For a short wavetable, this manifests as distortion,
+            # for a longer wavetable this is a pop or a click (much reduced compared to not trimming).
+            # The longer the wavetable is relative to the period of the note, the smaller the error is.
+            #eprint("Zero crossover error %f vs %f" %(sin(ang_per_sample*duration_samples), sin(duration_samples_pretrim*duration_samples)))
 
         result = np.zeros(duration_samples, dtype='float64')
 
@@ -80,6 +90,7 @@ class Note:
                 result = np.add(result, these_harmonics_values)
 
                 h_count += 1
+        #eprint("Get data took %f" %(time()-start))
         return result
 
     # Iterate over the phase list yeilding a wavetable for each one.
