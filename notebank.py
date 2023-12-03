@@ -64,7 +64,7 @@ class Notebank:
     def note_off(self, midi_key):
         eprint("Note off %d" %midi_key)
         self.current_note_mask &= ~ (1 << midi_key)
-        if self.current_note_mask == 0:
+        if self.current_note_mask == 0 and self.out_stream != None:
             ## TODO don't stop abruptly
             self.out_stream.stop()
             self.out_stream.close()
@@ -72,7 +72,8 @@ class Notebank:
         
 
     def stop(self):
-        if self.current_chord:
-            self.current_chord.stop()
-        self.current_chord = None
+        if self.out_stream:
+            self.out_stream.stop()
+            self.out_stream.close()
+        self.out_stream = None
         self.current_note_mask = 0
