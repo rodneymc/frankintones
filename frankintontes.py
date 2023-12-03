@@ -7,6 +7,7 @@ from notebank import Notebank
 from config import Config, eprint
 import json
 from pygame import midi
+import sounddevice as sd
 
 def main(args):
     if len(args) > 1:
@@ -17,6 +18,7 @@ def main(args):
     Config.set_print_config(config)
 
     midi.init()
+    eprint(sd.query_devices())
     midi_in = midi.Input(config.mididev)
     sleeptime = config.sleeptime
     tuning_number = 0

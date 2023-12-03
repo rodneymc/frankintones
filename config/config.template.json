@@ -10,21 +10,24 @@
             "refinterval": 2,
             "refdivisor": 12,
             "refnote": "A4",
-            "harmonics": [0.1, 0, 0.03, 0, 0.01]
+            "harmonics": [0.04, 0, 0.02, 0, 0.01],
+            "phases": [0, 2, 4]
         },
         "Frankintones": {
             "reffreq": 440,
             "refinterval": 1.5,
             "refdivisor": 7,
             "refnote": "A4",
-            "harmonics": [0.1, 0, 0.03, 0, 0.01]
+            "harmonics": [0.04, 0, 0.02, 0, 0.01],
+            "phases": [0, 2, 4]
         },
         "Daft1": {
             "reffreq": 440,
             "refinterval": 1.5,
             "refdivisor": 6,
             "refnote": "A4",
-            "harmonics": [0.5, 0, 0.2, 0, 0.1]
+            "harmonics": [0.04, 0, 0.02, 0, 0.01],
+            "phases": [0, 2, 4]
         }
     }
 }

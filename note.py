@@ -5,6 +5,12 @@ import numpy as np
 from config import eprint
 from time import time
 
+class Sinewave:
+    def __init__(self, amp, freq, phase):
+        self.amp = amp
+        self.freq = freq
+        self.phase = phase
+
 class Note:
 
     SAMPLERATE = 48000
@@ -17,11 +23,20 @@ class Note:
         self.config = config
         number = Note.name_to_number_abs(name) - Note.name_to_number_abs(tuning.refnote)
         self.freq = tuning.reffreq * tuning.refinterval ** (number / tuning.refdivisor)
+        self.angular_freq = self.freq * 2 * pi
         self.name = name
         self.harmonics = tuning.harmonics
         self.phases = tuning.phases #List of phase angles in radians
         self.wavetable = None    #Pre-prepared long-duration of tone
-        self.rt_wavetable = None #Pre-prepared wavetable list per phase for realtime
+ 
+        # Pre-computed attributes of the individual sinewaves
+        self.sinewaves = []
+        for phase in self.phases:
+            harmonic_number = 1
+            for harmonic_amplitude in self.harmonics:
+                self.sinewaves.append(Sinewave(harmonic_amplitude, self.angular_freq*harmonic_number, phase))
+                harmonic_number += 1
+
 
     # Get the integer absolute note number. This is now synchronized to use the same
     # scheme as MIDI numbering, which starts at C1. C is the first note in the octave
@@ -119,3 +134,6 @@ class Note:
         data = self.get_data(duration)
         sd.play(data, self.config.sample_rate)
         sd.wait()
+
+    def get_sinewave_attributes(self):
+        return self.sinewaves
