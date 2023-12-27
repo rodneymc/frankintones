@@ -8,15 +8,11 @@ from config import Config, eprint
 import json
 from pygame import midi
 import sounddevice as sd
+import threading
 
-def main(args):
-    if len(args) > 1:
-        config = Config(args[1])
-    else:
-        config = Config.get_default_config()
+stop = False
 
-    Config.set_print_config(config)
-
+def non_gui_main(args):
     midi.init()
     eprint(sd.query_devices())
     midi_in = midi.Input(config.mididev)
@@ -26,7 +22,7 @@ def main(args):
     eprint("Magic key is %d %s %s" %(magic_key, config.magickey, midi.midi_to_ansi_note(magic_key)))
     initialized_tunings = {}
 
-    while True:
+    while not stop:
         tuning_name, tuning = config.get_tuning_by_number(tuning_number)
         tuning_number += 1
         notebank = initialized_tunings.get(tuning_name)
@@ -39,7 +35,7 @@ def main(args):
         
         switch_tuning = False # until next switch
 
-        while not switch_tuning:
+        while not switch_tuning and not stop:
             if not midi_in.poll():
                 # As neither poll nor read block..
                 sleep(sleeptime)
@@ -58,9 +54,11 @@ def main(args):
                         if key == magic_key:
                             switch_tuning = True # To the next tuning
                             notebank.stop()
+                            break # Don't process any more messages until we have new notebank
                         else:
                             notebank.note_on(key)
     
+   
 
 def main_old(args):
     config = Config.get_default_config()
@@ -82,4 +80,39 @@ def play_scale(scale, config, tuningName):
     Note.play_buffer(scaleData, config)
 
 if __name__ == "__main__":
-    main(argv)
+
+    # Init the config    
+    if len(argv) > 1:
+        config = Config(argv[1])
+    else:
+        config = Config.get_default_config()
+
+    Config.set_print_config(config)
+
+    p = None
+
+    if config.plotting:
+        try:
+            from plotter import Plotter
+        except:
+            eprint("Unable to import Plot - is Matplotlib installed?")
+    
+        if Plotter:
+            p = Plotter(config.plotting)
+
+    # Launch the stuff that doesn't write to the screen in a different thread
+ 
+    t = threading.Thread(target = non_gui_main, args = argv)
+    t.start()
+
+    try:
+        if p != None:
+            p.run()    # Run the gui stuff in the main thread
+        else:
+            t.join() # TODO this is inconsistent
+    except KeyboardInterrupt:
+        print("Bye")
+    finally:
+        stop = True
+        t.join()
+

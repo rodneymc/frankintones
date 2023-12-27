@@ -41,7 +41,7 @@ class Config:
         self.mididev = Config.get_value(jobj, "mididev", None)
         self.sleeptime = Config.get_value(jobj, "sleeptime", 0.001)
         self.magickey = Config.get_value(jobj, "magickey", "A0")
-        self.octaves = Config.get_value(jobj, "octaves", None)
+        self.plotting = Config.get_value(jobj, "plotting", False)
 
         tunings = {}
         tunings_obj = jobj.get("tunings")
