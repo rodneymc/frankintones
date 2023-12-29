@@ -70,7 +70,7 @@ class Notebank:
         # time around.
         for sinewave_list in self.active_sinewaves.values():
             for sinewave in sinewave_list:
-                sw_data = sinewave.amp * np.sin(t*sinewave.freq + sinewave.phase)
+                sw_data = sinewave.get_data(t)
                 outdata[:] += sw_data
 
                 if plot_request_pending:
@@ -97,7 +97,7 @@ class Notebank:
                         # Where in the cycle will this waveform be at the beginning
                         # of the buffer?
 
-                        buf_begin_angle = (t[0]*sw.freq + sw.phase)%np.pi
+                        buf_begin_angle = (t[0]*sw.freq + sw.phase_relative_to_fundamental) %np.pi
 
                         # Number of radians until next zero crossover
                         rad_to_zero = np.pi - buf_begin_angle
@@ -111,7 +111,7 @@ class Notebank:
                             sw_moved_to_active_list.append(sw)
 
                             # Generate the data for this sinewave
-                            sw_data = sw.amp * np.sin(t*sw.freq + sw.phase)
+                            sw_data = sw.get_data(t)
                             # Overwrite up until the zero crossover with zeros
                             sw_data[0:next_zero_relative] = 0
                             outdata[:]+= sw_data

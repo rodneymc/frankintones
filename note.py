@@ -13,9 +13,13 @@ class Sinewave:
         self.harmonic_number = harmonic_number
         self.phase_degrees = phase_degrees
         self.phase = phase_degrees * pi / 180
+        self.phase_relative_to_fundamental = phase_degrees * harmonic_number * pi / 180
 
     def get_name(self):
         return "%s %d %d" %(self.note_name, self.harmonic_number, self.phase_degrees)
+    
+    def get_data(self, t):
+        return self.amp * np.sin(t*self.freq + self.phase_relative_to_fundamental)
 
 
 class Note:
