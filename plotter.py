@@ -60,7 +60,6 @@ class Plotter:
                 for data in data_to_process.individuals:
                     x = np.arange(data_to_process.start, data_to_process.end)
                     ax.plot(x, data.sw_data, label=data.sinewave.get_name())
-                    break # !
                 plt.draw()
 
     def stop(self):
