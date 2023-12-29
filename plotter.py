@@ -54,12 +54,11 @@ class Plotter:
                 break
 
             if data_to_process:
-                print("New figure")
                 fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
                 fig.canvas.mpl_connect('close_event', self.on_close)
 
                 for data in data_to_process.individuals:
-                    x = np.linspace(data.start, 1, data.length)
+                    x = np.arange(data_to_process.start, data_to_process.end)
                     ax.plot(x, data.sw_data, label=data.sinewave.get_name())
                     break # !
                 plt.draw()
@@ -87,8 +86,10 @@ class Plot_Request_Data:
 
 
 class Plot_Request:
-    def __init__(self, name):
+    def __init__(self, name, start, end):
         self.name = name
+        self.start = start
+        self.end = end
         self.individuals = []
 
     def add_individual(self, sinewave, sw_data, start, length):

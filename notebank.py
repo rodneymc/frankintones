@@ -60,7 +60,7 @@ class Notebank:
 
         with self.plot_request_mutex:
             if self.plot_request_pending:
-                plot_request_pending = Plot_Request(self.plot_request_pending)
+                plot_request_pending = Plot_Request(self.plot_request_pending, self.start_idx, self.start_idx+frames)
                 self.plot_request_pending = None
             else:
                 plot_request_pending = None
@@ -94,20 +94,29 @@ class Notebank:
                 for sw in sw_list[::-1]: # iterate backwards for efficient removal
                     if sw not in active_sw_list_for_note:
 
-                        # Calculate the samples between zero crossover, based on the
-                        # angular freq. Note we use pi not 2pi because two crosssovers.
-                        # Then add the initial phase offset. This gives the number of samples
-                        # to the first zero crossover
-                        samples_between_zeros = int (self.config.sample_rate / sw.freq * np.pi) 
-                        half_phase_offset_samples = int (self.config.sample_rate * sw.phase/sw.freq/2)
+                        # Where in the cycle will this waveform be at the beginning
+                        # of the buffer?
 
-                        samples_since_last_zero = self.start_idx % samples_between_zeros
-                        next_zero_relative = samples_between_zeros + half_phase_offset_samples - samples_since_last_zero
+                        buf_begin_angle = (t[0]*sw.freq + sw.phase)%np.pi
+
+                        # Number of radians until next zero crossover
+                        rad_to_zero = np.pi - buf_begin_angle
+
+                        samples_to_zero = rad_to_zero * self.config.sample_rate / sw.freq
+                        next_zero_relative = int(samples_to_zero)
 
                         if next_zero_relative < frames:
                             # It's going to occur in this frame
                             active_sw_list_for_note.append(sw)
                             sw_moved_to_active_list.append(sw)
+
+                            # Generate the data for this sinewave
+                            sw_data = sw.amp * np.sin(t*sw.freq + sw.phase)
+                            # Overwrite up until the zero crossover with zeros
+                            sw_data[0:next_zero_relative] = 0
+                            outdata[:]+= sw_data
+                            if plot_request_pending:
+                                plot_request_pending.add_individual(sw, sw_data, 0, frames)
                 
                 for sw in sw_moved_to_active_list:
                     sw_list.remove(sw)
