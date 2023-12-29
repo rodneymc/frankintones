@@ -6,10 +6,17 @@ from config import eprint
 from time import time
 
 class Sinewave:
-    def __init__(self, amp, freq, phase):
+    def __init__(self, note_name, amp, basefreq_hz, harmonic_number, phase_degrees):
+        self.note_name = note_name
         self.amp = amp
-        self.freq = freq
-        self.phase = phase
+        self.freq = basefreq_hz * 2 * pi * harmonic_number
+        self.harmonic_number = harmonic_number
+        self.phase_degrees = phase_degrees
+        self.phase = phase_degrees * pi / 180
+
+    def get_name(self):
+        return "%s %d %d" %(self.note_name, self.harmonic_number, self.phase_degrees)
+
 
 class Note:
 
@@ -22,18 +29,17 @@ class Note:
     def __init__(self, name, config, tuning):
         self.config = config
         number = Note.name_to_number_abs(name) - Note.name_to_number_abs(tuning.refnote)
-        self.freq = tuning.reffreq * tuning.refinterval ** (number / tuning.refdivisor)
-        self.angular_freq = self.freq * 2 * pi
+        freq = tuning.reffreq * tuning.refinterval ** (number / tuning.refdivisor)
         self.name = name
         self.harmonics = tuning.harmonics #List of amplitude of harmonics starting at fundamental
-        self.phases = tuning.phases #List of phase angles in radians
+        self.phases = tuning.phases #List of phase angles in degrees
  
         # Pre-computed attributes of the individual sinewaves
         self.sinewaves = []
         for phase in self.phases:
             harmonic_number = 1
             for harmonic_amplitude in self.harmonics:
-                self.sinewaves.append(Sinewave(harmonic_amplitude, self.angular_freq*harmonic_number, phase))
+                self.sinewaves.append(Sinewave(name, harmonic_amplitude, freq, harmonic_number, phase))
                 harmonic_number += 1
 
 

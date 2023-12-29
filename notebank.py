@@ -7,8 +7,8 @@ import sounddevice as sd
 import threading
 
 try:
-    from plotter import Plotter
-except: # probably matpotlib not installed
+    from plotter import Plotter, Plot_Request
+except ImportError: # probably matpotlib not installed
     Plotter = None
 
 class Notebank:
@@ -20,15 +20,18 @@ class Notebank:
         self.active_sinewaves = {}
         self.sinewaves_pending_start = {}
         self.sinewaves_pending_stop = {}
-        self.plot_request_pending = False
         # End variables protected by sine_lists_mutex
         self.sine_lists_mutex = threading.Lock()
+
         if Plotter:
             self.plotting = config.plotting
             if self.plotting:
                 self.plotter = Plotter.get_plotter()
         else:
             self.plotting = False
+
+        self.plot_request_pending = None
+        self.plot_request_mutex = threading.Lock()
 
         # Start from Midi note number zero so we can just
         # have a simple array.
@@ -55,11 +58,23 @@ class Notebank:
 
         outdata[:] = np.zeros((frames, 1))
 
+        with self.plot_request_mutex:
+            if self.plot_request_pending:
+                plot_request_pending = Plot_Request(self.plot_request_pending)
+                self.plot_request_pending = None
+            else:
+                plot_request_pending = None
+
+
         # Now add the existing active waves that are not being added or removed this
         # time around.
         for sinewave_list in self.active_sinewaves.values():
             for sinewave in sinewave_list:
-                outdata[:] += sinewave.amp * np.sin(t*sinewave.freq + sinewave.phase)
+                sw_data = sinewave.amp * np.sin(t*sinewave.freq + sinewave.phase)
+                outdata[:] += sw_data
+
+                if plot_request_pending:
+                    plot_request_pending.add_individual(sinewave, sw_data, 0, frames)
 
 
         # TODO this is an outline framework for allowing the sinewaves to
@@ -102,17 +117,15 @@ class Notebank:
                     if self.active_sinewaves.get(note_num):
                         self.active_sinewaves.pop(note_num)
 
-            if self.plot_request_pending:
-                self.plotter.post_plot()
-                self.plot_request_pending = False
+            if plot_request_pending:
+                self.plotter.post_plot(plot_request_pending)
 
         self.start_idx += frames
 
     def note_on(self, midi_key):
         note = self.notelist[midi_key]
-        eprint("Note on %d %s %dHz" %(midi_key, note.name, note.freq))
 
-        self.request_plot()
+        self.request_plot("%s ON" % note.name)
 
         with self.sine_lists_mutex:
 
@@ -143,32 +156,18 @@ class Notebank:
             self.out_stream.start()
 
     def note_off(self, midi_key):
-        eprint("Note off %d" %midi_key)
+        note = self.notelist[midi_key]
+        self.request_plot("%s OFF" %note.name)
         with self.sine_lists_mutex:
             self.sinewaves_pending_stop[midi_key] = self.active_sinewaves.get(midi_key)
             # Cancel any sinewaves from this note that have been queued to start already
             if self.sinewaves_pending_start.get(midi_key):
                 self.sinewaves_pending_start.pop(midi_key)
 
-    def request_plot(self):
+    def request_plot(self, name):
 
         if self.plotting:
-            self.plot_request_pending = True
-
-        return
-        ###TODO obsolete code below
-
-        # Iterate the list of active plots and remove those that
-        # are actually finished with
-
-        if (self.plotting):
-            with self.sine_lists_mutex:
-                for p in self.plots_active[::-1]:
-                    if p.finished(): # user has closed the window
-                        self.plots_active.remove(p)
-                if len(self.plots_active) < self.plotting:
-                    self.plot_request_pending = True
-
+            self.plot_request_pending = name
 
     def stop(self):
         if self.out_stream:

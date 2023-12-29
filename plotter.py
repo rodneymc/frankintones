@@ -28,14 +28,14 @@ class Plotter:
 
         Plotter.singleton = self
 
-    def post_plot(self):
+    def post_plot(self, posted_data):
         with self.figure_count_lock:
             if self.figure_count >= self.max_plots:
                 return
             self.figure_count += 1
 
         with self.condition:
-            self.posted_data = True # TODO
+            self.posted_data = posted_data
             self.condition.notify()
     
     def run(self):
@@ -57,8 +57,11 @@ class Plotter:
                 print("New figure")
                 fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
                 fig.canvas.mpl_connect('close_event', self.on_close)
-                x = np.linspace(0, 2, 100)  # Sample data.
-                ax.plot(x, x**2, label='quadratic')
+
+                for data in data_to_process.individuals:
+                    x = np.linspace(data.start, 1, data.length)
+                    ax.plot(x, data.sw_data, label=data.sinewave.get_name())
+                    break # !
                 plt.draw()
 
     def stop(self):
@@ -74,3 +77,19 @@ class Plotter:
         # Seemingly due to a bug in TK or Matplotlib we have to close all of the windows
         # and start again.
         plt.close()
+
+class Plot_Request_Data:
+    def __init__(self, sinewave, sw_data, start, length):
+        self.sinewave = sinewave
+        self.sw_data = sw_data.copy()
+        self.start = start
+        self.length = length
+
+
+class Plot_Request:
+    def __init__(self, name):
+        self.name = name
+        self.individuals = []
+
+    def add_individual(self, sinewave, sw_data, start, length):
+        self.individuals.append(Plot_Request_Data(sinewave, sw_data, start, length))
