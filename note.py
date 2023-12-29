@@ -20,7 +20,6 @@ class Sinewave:
 
 class Note:
 
-    SAMPLERATE = 48000
     NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
     # Note number is relative to the reference note. Eg if ref note is C2
